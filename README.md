@@ -7,7 +7,7 @@ Perfect for tracking birthdays, exams, product launches, holidays, meetings, tra
 
 ---
 
-### 🔗 Live Preview: 
+### 🔗 Live Preview: https://abdurrahmancce.github.io/Countdown-Event-Manager/
 
 ---
 
@@ -42,6 +42,9 @@ Perfect for tracking birthdays, exams, product launches, holidays, meetings, tra
 ---
 
 # 📸 Preview
+
+<img width="1920" height="1900" alt="image" src="https://github.com/user-attachments/assets/6932f1aa-4e3b-40f4-8852-1f8a1d7e4dde" />
+
 
 The application includes:
 
