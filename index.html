@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countdown Event Manager</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ─── Celebration Overlay ─── -->
+  <div id="celebrationOverlay" class="celebration-overlay hidden">
+    <div class="confetti-container" id="confettiContainer"></div>
+    <div class="celebration-msg">
+      <div class="celebration-icon">🎉</div>
+      <h2 id="celebrationTitle">Event has begun!</h2>
+      <p id="celebrationSub">Your countdown has reached zero.</p>
+      <button class="btn btn-primary" onclick="closeCelebration()">Continue</button>
+    </div>
+  </div>
+
+  <!-- ─── Header ─── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M14 7v7l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="2" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">Countd<span class="accent">own</span></span>
+      </div>
+
+      <nav class="header-nav">
+        <button class="nav-filter active" data-filter="all">All</button>
+        <button class="nav-filter" data-filter="upcoming">Upcoming</button>
+        <button class="nav-filter" data-filter="expired">Expired</button>
+      </nav>
+
+      <div class="header-actions">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search events…" />
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 20 20" fill="none">
+            <path d="M17.5 11.5A7.5 7.5 0 018.5 2.5a7.5 7.5 0 100 15 7.5 7.5 0 009-6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary" id="addEventBtn">
+          <svg viewBox="0 0 20 20" fill="none" style="width:16px;height:16px">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          New Event
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Stats Bar ─── -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <span class="stat-num" id="statTotal">0</span>
+      <span class="stat-label">Total Events</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-num upcoming" id="statUpcoming">0</span>
+      <span class="stat-label">Upcoming</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-num expired" id="statExpired">0</span>
+      <span class="stat-label">Expired</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item sort-item">
+      <label class="stat-label" for="sortSelect">Sort by</label>
+      <select id="sortSelect" class="sort-select">
+        <option value="nearest">Nearest first</option>
+        <option value="farthest">Farthest first</option>
+        <option value="created">Date added</option>
+        <option value="name">Name A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ─── Main Content ─── -->
+  <main class="main-content">
+    <div class="events-grid" id="eventsGrid"></div>
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">
+        <svg viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <path d="M32 18v14l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 id="emptyTitle">No events yet</h3>
+      <p id="emptyMsg">Create your first countdown event to get started.</p>
+      <button class="btn btn-primary" id="emptyAddBtn">Add Event</button>
+    </div>
+  </main>
+
+  <!-- ─── Modal Backdrop ─── -->
+  <div class="modal-backdrop hidden" id="modalBackdrop"></div>
+
+  <!-- ─── Event Modal ─── -->
+  <div class="modal hidden" id="eventModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">New Event</h2>
+      <button class="modal-close" id="modalClose" aria-label="Close">
+        <svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px">
+          <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="eventForm" novalidate>
+      <input type="hidden" id="editingId" />
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label" for="eventTitle">Event Title <span class="req">*</span></label>
+          <input class="form-input" type="text" id="eventTitle" placeholder="e.g. Product Launch 2025" maxlength="80" />
+          <span class="form-error" id="titleError"></span>
+        </div>
+      </div>
+
+      <div class="form-row two-col">
+        <div class="form-group">
+          <label class="form-label" for="eventDate">Date <span class="req">*</span></label>
+          <input class="form-input" type="date" id="eventDate" />
+          <span class="form-error" id="dateError"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="eventTime">Time <span class="req">*</span></label>
+          <input class="form-input" type="time" id="eventTime" />
+          <span class="form-error" id="timeError"></span>
+        </div>
+      </div>
+
+      <div class="form-row two-col">
+        <div class="form-group">
+          <label class="form-label" for="eventCategory">Category</label>
+          <select class="form-input" id="eventCategory">
+            <option value="general">📌 General</option>
+            <option value="birthday">🎂 Birthday</option>
+            <option value="work">💼 Work</option>
+            <option value="travel">✈️ Travel</option>
+            <option value="sports">⚽ Sports</option>
+            <option value="music">🎵 Music</option>
+            <option value="holiday">🌴 Holiday</option>
+            <option value="health">💊 Health</option>
+            <option value="finance">💰 Finance</option>
+            <option value="education">📚 Education</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="eventColor">Accent Color</label>
+          <div class="color-picker" id="colorPicker">
+            <button type="button" class="color-swatch active" data-color="#f59e0b" style="background:#f59e0b" title="Amber"></button>
+            <button type="button" class="color-swatch" data-color="#3b82f6" style="background:#3b82f6" title="Blue"></button>
+            <button type="button" class="color-swatch" data-color="#10b981" style="background:#10b981" title="Emerald"></button>
+            <button type="button" class="color-swatch" data-color="#ef4444" style="background:#ef4444" title="Red"></button>
+            <button type="button" class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Purple"></button>
+            <button type="button" class="color-swatch" data-color="#ec4899" style="background:#ec4899" title="Pink"></button>
+            <button type="button" class="color-swatch" data-color="#06b6d4" style="background:#06b6d4" title="Cyan"></button>
+            <button type="button" class="color-swatch" data-color="#f97316" style="background:#f97316" title="Orange"></button>
+          </div>
+          <input type="hidden" id="eventColor" value="#f59e0b" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full">
+          <label class="form-label" for="eventDesc">Description <span class="optional">(optional)</span></label>
+          <textarea class="form-input form-textarea" id="eventDesc" placeholder="Add notes or details about this event…" maxlength="280" rows="3"></textarea>
+          <span class="char-count" id="descCount">0 / 280</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full toggle-row">
+          <label class="form-label toggle-label">
+            <span>Notify me before event</span>
+            <div class="toggle-wrap">
+              <input type="checkbox" id="notifyToggle" class="toggle-input" />
+              <span class="toggle-track"></span>
+            </div>
+          </label>
+          <div class="notify-options hidden" id="notifyOptions">
+            <select class="form-input" id="notifyMinutes" style="width:auto;margin-top:8px">
+              <option value="15">15 minutes before</option>
+              <option value="30">30 minutes before</option>
+              <option value="60" selected>1 hour before</option>
+              <option value="1440">1 day before</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Create Event</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── Delete Confirm Modal ─── -->
+  <div class="modal modal-sm hidden" id="deleteModal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 class="modal-title">Delete Event</h2>
+      <button class="modal-close" id="deleteCancelX">
+        <svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px">
+          <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <p class="delete-msg">Are you sure you want to delete <strong id="deleteEventName"></strong>? This action cannot be undone.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="deleteCancelBtn">Keep Event</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+
+  <!-- ─── Export / Import Toolbar ─── -->
+  <div class="fab-group">
+    <button class="fab fab-sm" id="importBtn" title="Import events">
+      <svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px">
+        <path d="M10 3v10M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 15h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button class="fab fab-sm" id="exportBtn" title="Export events">
+      <svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px">
+        <path d="M10 13V3M6 7l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 15h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none" />
+
+  <script src="script.js"></script>
+</body>
+</html>
